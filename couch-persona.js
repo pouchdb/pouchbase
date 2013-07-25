@@ -5,8 +5,8 @@
 // TODO: We should split this into a login-with-persona-and-create-couch-user
 // and a create-database-per-couch-user module
 
-// TODO: I think we probably need some way to specify an application prefix 
-// to use, if multiple applications use the same auth server their data 
+// TODO: I think we probably need some way to specify an application prefix
+// to use, if multiple applications use the same auth server their data
 // will be messed up
 
 "use strict";
@@ -30,7 +30,7 @@ var logger = require('./couch-persona-log.js');
 function verifyAssert(assert, audience, callback) {
   logger.info('Verifying assertion');
   request({
-    method: 'POST', 
+    method: 'POST',
     json: true,
     uri: ASSERT_URL,
     form: {
@@ -46,18 +46,18 @@ function ensureUser(err, body, callback) {
   var userDoc = createUserDoc(email);
   var userDocUri = commander.host + '/_users/' + userDoc._id;
   request({
-    method: 'GET', 
+    method: 'GET',
     uri: userDocUri
   }, function(err, res, body) {
     if (res.statusCode === 200) {
       // Copy over any existing attributes (including _rev so we can update it)
       userDoc = _.extend(body, userDoc);
-    } else { 
+    } else {
       logger.info('User', body.email, 'doesnt exist, creating ...');
     }
     request({
-      method: 'PUT', 
-      json: userDoc, 
+      method: 'PUT',
+      json: userDoc,
       uri: userDocUri
     }, function(err, res, body) {
       callback(null, userDoc);
@@ -65,61 +65,71 @@ function ensureUser(err, body, callback) {
   });
 }
 
-function ensureDatabase(userDoc, callback) { 
+function ensureDatabase(userDoc, callback) {
   logger.info('Ensuring', userDoc.db, 'exists');
   request({
-    method: 'PUT', 
-    json: true, 
+    method: 'PUT',
+    json: true,
     uri: userDoc.db
   }, function(err, res, body) {
-    if (!err && (res.statusCode === 201 || res.statusCode === 412)) { 
+    if (!err && (res.statusCode === 201 || res.statusCode === 412)) {
       callback(null, userDoc);
     } else {
       callback({status: 400, json: {error: 'error_creating_database'}});
     }
-  });  
+  });
 }
 
 function ensureUserSecurity(userDoc, callback) {
   logger.info('Ensuring', userDoc.name, 'only can write to', userDoc.db);
   var securityDoc = {
-    admins: {names:[], roles: []}, 
+    admins: {names:[], roles: []},
     readers: {names: [userDoc.name], roles: []}
   };
   request({
-    method: 'PUT', 
+    method: 'PUT',
     json: securityDoc,
     uri: userDoc.db + '/_security'
   }, function(err, res, body) {
-    if (!err) { 
+    if (!err) {
       callback(null, userDoc);
     } else {
       callback({status: 400, json: {error: 'error_securing_database'}});
     }
-  });  
- 
+  });
+
 }
 
-function createSessionToken(userDoc, callback) { 
+function createSessionToken(userDoc, callback) {
   logger.info('Creating session');
   request({
-    method: 'POST', 
+    method: 'POST',
     uri: commander.host + '/_session',
-    form: { 
-      name: userDoc.name, 
+    form: {
+      name: userDoc.name,
       password: userDoc.password
     }
   }, function(err, res, body) {
-    if (res.statusCode === 200) { 
-      userDoc.authToken = res.headers['set-cookie'][0];
+    if (res.statusCode === 200) {
+      var cookies = parseCookie(res.headers['set-cookie'][0]);
+      userDoc.authToken = 'AuthSession=' + cookies.AuthSession;
       callback(null, userDoc);
     } else {
-      
+
       callback({error: 'screwed'});
     }
-  });  
+  });
 }
 
+function parseCookie(str) {
+  var cookies = {};
+  str.split(';').forEach(function(cookie) {
+    console.log('cookie', cookie);
+    var parts = cookie.split('=');
+    cookies[parts[0].trim()] = (parts[1] || '').trim();
+  });
+  return cookies;
+}
 function sendJSON(client, status, content, hdrs) {
   var headers = _.extend({'Content-Type': 'application/json'}, hdrs);
   client.writeHead(status, headers);
@@ -127,7 +137,7 @@ function sendJSON(client, status, content, hdrs) {
   client.end();
 }
 
-function createUserDoc(email) { 
+function createUserDoc(email) {
   // Email addresses arent valid database names, so just hash them
   var dbName = DB_PREFIX + crypto.createHash('md5').update(email).digest("hex");
   return {
@@ -137,9 +147,9 @@ function createUserDoc(email) {
     roles: ['browserid'],
     browserid: true,
     db: commander.host + '/' + dbName,
-    // We generate a random password every time a user logs in to give 
+    // We generate a random password every time a user logs in to give
     // them a valid session token
-    password: uuid.v1()
+    password: 'test'//uuid.v1()
   };
 }
 
@@ -156,15 +166,15 @@ app.use(allowCrossDomain);
 
 app.post('/persona/sign-in', function(req, res) {
   async.waterfall([
-    verifyAssert.bind(this, req.body.assert, req.headers.origin), 
-    ensureUser, 
+    verifyAssert.bind(this, req.body.assert, req.headers.origin),
+    ensureUser,
     ensureDatabase,
     ensureUserSecurity,
     createSessionToken
-  ], function (err, userDoc) { 
-    if (err) { 
+  ], function (err, userDoc) {
+    if (err) {
       sendJSON(res, err.status, err.json);
-    } else { 
+    } else {
       sendJSON(res, 200, {
         ok: true,
         dbUrl: userDoc.db,
@@ -191,13 +201,13 @@ commander
   .option('-P, --port <n>', 'Port number to run couch-persona on', parseInt)
   .parse(process.argv);
 
-if (!commander.host) { 
+if (!commander.host) {
   console.log('The host argument is required');
   commander.help();
   process.exit(1);
 }
 
-// TODO: We should verify that we have a running CouchDB instance, and probably 
+// TODO: We should verify that we have a running CouchDB instance, and probably
 // also test for CORS being enabled and warn if not
 
 if (!commander.username || !commander.password) {
@@ -209,7 +219,7 @@ if (!commander.username || !commander.password) {
   request = request.defaults({
     json: true,
     auth: {
-      username: commander.username, 
+      username: commander.username,
       password: commander.password
     }
   });

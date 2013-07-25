@@ -11,7 +11,7 @@ couch-persona requires a CouchDB host running, preferably with CORS support enab
 Install and start your server
 
 ```bash
-$ npm install couch-persona
+$ npm install -g couch-persona
 $ couch-persona --host=http://127.0.0.1:5984 --username=john --password=doe
 ````
 
