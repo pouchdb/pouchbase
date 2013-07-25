@@ -53,6 +53,8 @@ function ensureUser(err, body, callback) {
       // Copy over any existing attributes (including _rev so we can update it)
       userDoc = _.extend(body, userDoc);
     } else {
+      userDoc.password = uuid.v1();
+      userDoc.thepassword = userDoc.password;
       logger.info('User', body.email, 'doesnt exist, creating ...');
     }
     request({
@@ -107,7 +109,7 @@ function createSessionToken(userDoc, callback) {
     uri: commander.host + '/_session',
     form: {
       name: userDoc.name,
-      password: userDoc.password
+      password: userDoc.thepassword
     }
   }, function(err, res, body) {
     if (res.statusCode === 200) {
@@ -124,7 +126,6 @@ function createSessionToken(userDoc, callback) {
 function parseCookie(str) {
   var cookies = {};
   str.split(';').forEach(function(cookie) {
-    console.log('cookie', cookie);
     var parts = cookie.split('=');
     cookies[parts[0].trim()] = (parts[1] || '').trim();
   });
@@ -146,10 +147,7 @@ function createUserDoc(email) {
     name: email,
     roles: ['browserid'],
     browserid: true,
-    db: commander.host + '/' + dbName,
-    // We generate a random password every time a user logs in to give
-    // them a valid session token
-    password: 'test'//uuid.v1()
+    db: commander.host + '/' + dbName
   };
 }
 
