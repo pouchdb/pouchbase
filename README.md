@@ -12,7 +12,7 @@ Install and start your server
 
 ```bash
 $ npm install couch-persona
-$ npm start couch-persona --host=http://127.0.0.1:5984 --username=john --password=doe
+$ couch-persona --host=http://127.0.0.1:5984 --username=john --password=doe
 ````
 
 Follow the [Quick Setup instructions](https://developer.mozilla.org/en-US/docs/Mozilla/Persona/Quick_Setup) on the MDN wiki to install the persona client on your site, ensure you use the correct urls to sign in and out (`/persona/sign-in` + `/persona/sign-out`). Here is some example working code:
