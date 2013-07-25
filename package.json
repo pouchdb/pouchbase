@@ -1,7 +1,7 @@
 {
   "name": "couch-persona",
   "description": "A server that integrates persona with CouchDB",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "homepage": "https://github.com/daleharvey/couch-persona",
   "author": {
     "name": "Dale Harvey",
@@ -19,7 +19,7 @@
     "start": "node ./couch-persona.js"
   },
   "dependencies": {
-    "_": "*",
+    "underscore": "*",
     "async": "*",
     "commander": "*",
     "express": "*",
