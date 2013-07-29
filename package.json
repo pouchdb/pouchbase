@@ -1,7 +1,7 @@
 {
   "name": "couch-persona",
   "description": "A server that integrates persona with CouchDB",
-  "version": "0.0.4",
+  "version": "0.0.6",
   "homepage": "https://github.com/daleharvey/couch-persona",
   "author": {
     "name": "Dale Harvey",
