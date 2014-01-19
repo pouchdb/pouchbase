@@ -178,7 +178,6 @@ if (!commander.host || !commander.db) {
 var db = url.parse(commander.db);
 var host = url.parse(commander.host);
 
-var dbProxy = httpProxy.createServer(db.port, db.host);
 var app = express();
 
 app.configure(function() {
