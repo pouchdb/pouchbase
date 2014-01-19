@@ -206,7 +206,8 @@ app.post('/persona/sign-in', function(req, res) {
     } else {
       sendJSON(res, 200, {
         ok: true,
-        dbUrl: url.format(host) + 'db/' + userDoc.db
+        db: url.format(host) + 'db/' + userDoc.db,
+        name: userDoc.name
       }, {'Set-Cookie': userDoc.authToken});
     }
   });
