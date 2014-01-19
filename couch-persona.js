@@ -17,6 +17,7 @@ var DB_PREFIX = 'couch_persona_';
 var fs = require('fs');
 var path = require('path');
 var crypto = require('crypto');
+var url = require('url');
 
 var _ = require('underscore');
 var async = require('async');
@@ -44,7 +45,7 @@ function ensureUser(err, body, callback) {
   logger.info('Ensuring', body.email, 'user exists');
   var email = body.email;
   var userDoc = createUserDoc(email);
-  var userDocUri = commander.host + '/_users/' + userDoc._id;
+  var userDocUri = url.format(db) + '_users/' + userDoc._id;
   request({
     method: 'GET',
     uri: userDocUri
@@ -72,7 +73,7 @@ function ensureDatabase(userDoc, callback) {
   request({
     method: 'PUT',
     json: true,
-    uri: userDoc.db
+    uri: url.format(db) + userDoc.db
   }, function(err, res, body) {
     if (!err && (res.statusCode === 201 || res.statusCode === 412)) {
       callback(null, userDoc);
@@ -91,7 +92,7 @@ function ensureUserSecurity(userDoc, callback) {
   request({
     method: 'PUT',
     json: securityDoc,
-    uri: userDoc.db + '/_security'
+    uri: url.format(db) + userDoc.db + '/_security'
   }, function(err, res, body) {
     if (!err) {
       callback(null, userDoc);
@@ -106,7 +107,7 @@ function createSessionToken(userDoc, callback) {
   logger.info('Creating session');
   request({
     method: 'POST',
-    uri: commander.host + '/_session',
+    uri: url.format(db) + '_session',
     form: {
       name: userDoc.name,
       password: userDoc.thepassword
@@ -117,7 +118,6 @@ function createSessionToken(userDoc, callback) {
       userDoc.authToken = 'AuthSession=' + cookies.AuthSession;
       callback(null, userDoc);
     } else {
-
       callback({error: 'screwed'});
     }
   });
@@ -131,6 +131,7 @@ function parseCookie(str) {
   });
   return cookies;
 }
+
 function sendJSON(client, status, content, hdrs) {
   var headers = _.extend({'Content-Type': 'application/json'}, hdrs);
   client.writeHead(status, headers);
@@ -147,20 +148,51 @@ function createUserDoc(email) {
     name: email,
     roles: ['browserid'],
     browserid: true,
-    db: commander.host + '/' + dbName
+    db: dbName
   };
 }
 
-var allowCrossDomain = function(req, res, next) {
-  res.header('Access-Control-Allow-Origin', '*');
+function allowCrossDomain(req, res, next) {
+  res.header('Access-Control-Allow-Origin', req.headers.origin);
   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
   res.header('Access-Control-Allow-Headers', 'Content-Type');
+  res.header('Access-Control-Allow-Credentials', 'true');
   next();
 };
 
+commander
+  .version('0.0.1')
+  .option('--host [value]', 'location of me')
+  .option('--db [value]', 'location of couch http://127.0.0.1:5984')
+  .option('--username [value]', 'CouchDB admin username')
+  .option('--password [value]', 'CouchDB admin password')
+  .option('--port <n>', 'Port number to run couch-persona on', parseInt)
+  .parse(process.argv);
+
+if (!commander.host || !commander.db) {
+  console.log('The host argument is required');
+  commander.help();
+  process.exit(1);
+}
+
+var db = url.parse(commander.db);
+var host = url.parse(commander.host);
+
+var dbProxy = httpProxy.createServer(db.port, db.host);
 var app = express();
-app.use(express.bodyParser());
-app.use(allowCrossDomain);
+
+app.configure(function() {
+
+  app.use(express.cookieParser());
+
+  app.use('/db/', function(req, res) {
+    var erl = url.format(db) + req.url.substring(1);
+    req.pipe(request(erl)).pipe(res);
+  });
+
+  app.use(express.bodyParser());
+  app.use(allowCrossDomain);
+});
 
 app.post('/persona/sign-in', function(req, res) {
   async.waterfall([
@@ -175,9 +207,8 @@ app.post('/persona/sign-in', function(req, res) {
     } else {
       sendJSON(res, 200, {
         ok: true,
-        dbUrl: userDoc.db,
-        authToken: userDoc.authToken
-      });
+        dbUrl: url.format(host) + 'db/' + userDoc.db
+      }, {'Set-Cookie': userDoc.authToken});
     }
   });
 });
@@ -190,20 +221,6 @@ app.post('/persona/sign-out', function(req, res) {
     ok: true
   });
 });
-
-commander
-  .version('0.0.1')
-  .option('-h, --host [value]', 'CouchDB host (for example http://127.0.0.1:5984)')
-  .option('-u, --username [value]', 'CouchDB admin username')
-  .option('-p, --password [value]', 'CouchDB admin password')
-  .option('-P, --port <n>', 'Port number to run couch-persona on', parseInt)
-  .parse(process.argv);
-
-if (!commander.host) {
-  console.log('The host argument is required');
-  commander.help();
-  process.exit(1);
-}
 
 // TODO: We should verify that we have a running CouchDB instance, and probably
 // also test for CORS being enabled and warn if not
