@@ -182,6 +182,7 @@ var app = express();
 
 app.configure(function() {
 
+  app.use(allowCrossDomain);
   app.use(express.cookieParser());
 
   app.use('/db/', function(req, res) {
@@ -190,7 +191,6 @@ app.configure(function() {
   });
 
   app.use(express.bodyParser());
-  app.use(allowCrossDomain);
 });
 
 app.post('/persona/sign-in', function(req, res) {
