@@ -16,6 +16,7 @@
     "couch-persona": "./couch-persona.js"
   },
   "dependencies": {
+    "http-proxy": "*",
     "underscore": "*",
     "async": "*",
     "commander": "*",
