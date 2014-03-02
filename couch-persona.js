@@ -170,7 +170,7 @@ commander
   .parse(process.argv);
 
 if (!commander.host || !commander.db) {
-  console.log('The host argument is required');
+  console.log('The host and db arguments are required');
   commander.help();
   process.exit(1);
 }
