@@ -38,10 +38,16 @@ function verifyAssert(assert, audience, callback) {
       assertion: assert,
       audience: audience
     }
-  }, callback);
+  }, function(err, msg, body) {
+    if (err || body.status == "failure") {
+      callback({status: 400, json: {error: 'error_veryfying_assertion'}});
+    } else {
+      callback(err, msg, body);
+    }
+  });
 }
 
-function ensureUser(err, body, callback) {
+function ensureUser(msg, body, callback) {
   logger.info('Ensuring', body.email, 'user exists');
   var email = body.email;
   var userDoc = createUserDoc(email);
