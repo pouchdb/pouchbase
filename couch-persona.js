@@ -32,8 +32,8 @@ function verifyAssert(assert, audience, callback) {
   logger.info('Verifying assertion');
   request({
     method: 'POST',
-    json: true,
     uri: ASSERT_URL,
+    auth: adminAuth,
     form: {
       assertion: assert,
       audience: audience
@@ -54,23 +54,33 @@ function ensureUser(msg, body, callback) {
   var userDocUri = url.format(db) + '_users/' + userDoc._id;
   request({
     method: 'GET',
-    uri: userDocUri
+    uri: userDocUri,
+    auth: adminAuth,
   }, function(err, res, body) {
-    if (res.statusCode === 200) {
-      // Copy over any existing attributes (including _rev so we can update it)
-      userDoc = _.extend(body, userDoc);
+    if (err) {
+      callback({status: 400, json: {error: 'error_retrieving_user'}});
     } else {
-      userDoc.password = uuid.v1();
-      userDoc.thepassword = userDoc.password;
-      logger.info('User', body.email, 'doesnt exist, creating ...');
+      if (res.statusCode === 200) {
+        // Copy over any existing attributes (including _rev so we can update it)
+        userDoc = _.extend(body, userDoc);
+      } else {
+        userDoc.password = uuid.v1();
+        userDoc.thepassword = userDoc.password;
+        logger.info('User', body.email, 'doesn\'t exist, creating ...');
+      }
+      request({
+        method: 'PUT',
+        json: userDoc,
+        auth: adminAuth,
+        uri: userDocUri
+      }, function(err, res, body) {
+        if (!err) {
+          callback(null, userDoc);
+        } else {
+          callback({status: 400, json: {error: 'error_creating_user'}});
+        }
+      });
     }
-    request({
-      method: 'PUT',
-      json: userDoc,
-      uri: userDocUri
-    }, function(err, res, body) {
-      callback(null, userDoc);
-    });
   });
 }
 
@@ -78,7 +88,7 @@ function ensureDatabase(userDoc, callback) {
   logger.info('Ensuring', userDoc.db, 'exists');
   request({
     method: 'PUT',
-    json: true,
+    auth: adminAuth,
     uri: url.format(db) + userDoc.db
   }, function(err, res, body) {
     if (!err && (res.statusCode === 201 || res.statusCode === 412)) {
@@ -98,6 +108,7 @@ function ensureUserSecurity(userDoc, callback) {
   request({
     method: 'PUT',
     json: securityDoc,
+    auth: adminAuth,
     uri: url.format(db) + userDoc.db + '/_security'
   }, function(err, res, body) {
     if (!err) {
@@ -121,10 +132,10 @@ function createSessionToken(userDoc, callback) {
   }, function(err, res, body) {
     if (res.statusCode === 200) {
       var cookies = parseCookie(res.headers['set-cookie'][0]);
-      userDoc.authToken = 'AuthSession=' + cookies.AuthSession;
+      userDoc.authToken = 'AuthSession=' + cookies.AuthSession + '; Path=/db; HttpOnly';
       callback(null, userDoc);
     } else {
-      callback({error: 'screwed'});
+      callback({status: 400, json: {error: 'error_creating_session'}});
     }
   });
 }
@@ -181,8 +192,20 @@ if (!commander.host || !commander.db) {
   process.exit(1);
 }
 
+// TODO: We should verify that we have a running CouchDB instance, and probably
+// also test for CORS being enabled and warn if not
+
+if (!commander.username || !commander.password) {
+  // TODO: Ensure we are in admin party or fail nicely
+  console.log('You are not in admin party');
+  process.exit(1);
+} else {
+  request = request.defaults({json: true});
+}
+
 var db = url.parse(commander.db);
 var host = url.parse(commander.host);
+var adminAuth = {user: commander.username, pass: commander.password};
 
 var app = express();
 
@@ -208,8 +231,10 @@ app.post('/persona/sign-in', function(req, res) {
     createSessionToken
   ], function (err, userDoc) {
     if (err) {
+      logger.error('Error during sign-in: ', err);
       sendJSON(res, err.status, err.json);
     } else {
+      logger.info('Successful sign-in');
       sendJSON(res, 200, {
         ok: true,
         db: url.format(host) + 'db/' + userDoc.db,
@@ -227,23 +252,5 @@ app.post('/persona/sign-out', function(req, res) {
     ok: true
   });
 });
-
-// TODO: We should verify that we have a running CouchDB instance, and probably
-// also test for CORS being enabled and warn if not
-
-if (!commander.username || !commander.password) {
-  // TODO: Ensure we are in admin party or fail nicely
-  // remember to request = request.defaults({json: true});
-  console.log('You are not in admin party');
-  process.exit(1);
-} else {
-  request = request.defaults({
-    json: true,
-    auth: {
-      username: commander.username,
-      password: commander.password
-    }
-  });
-}
 
 app.listen(commander.port || 3000);
