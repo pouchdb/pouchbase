@@ -1,0 +1,12 @@
+# URL to Persona verification server
+ASSERT_URL: https://verifier.login.persona.org/verify
+
+# URL and port of this couch-persona instance
+HOST_URL: http://localhost
+HOST_PORT: 3000
+
+# URL to CouchDB instance that will be used
+DB_URL: http://localhost:5984
+
+# Prefix that will be added to every db created by couch-persona
+DB_PREFIX: couch_persona_

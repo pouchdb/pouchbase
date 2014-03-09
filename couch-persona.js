@@ -11,9 +11,6 @@
 
 "use strict";
 
-var ASSERT_URL = 'https://verifier.login.persona.org/verify';
-var DB_PREFIX = 'couch_persona_';
-
 var fs = require('fs');
 var path = require('path');
 var crypto = require('crypto');
@@ -25,6 +22,9 @@ var commander = require('commander');
 var express = require('express');
 var request = require('request');
 var uuid = require('node-uuid');
+var yaml = require('js-yaml');
+
+var config = yaml.safeLoad(fs.readFileSync('./config.yaml', 'utf8'));
 
 var logger = require('./couch-persona-log.js');
 
@@ -32,22 +32,22 @@ function verifyAssert(assert, audience, callback) {
   logger.info('Verifying assertion');
   request({
     method: 'POST',
-    uri: ASSERT_URL,
+    uri: config.ASSERT_URL,
     auth: adminAuth,
     form: {
       assertion: assert,
       audience: audience
     }
-  }, function(err, msg, body) {
+  }, function(err, res, body) {
     if (err || body.status == "failure") {
       callback({status: 400, json: {error: 'error_veryfying_assertion'}});
     } else {
-      callback(err, msg, body);
+      callback(err, body);
     }
   });
 }
 
-function ensureUser(msg, body, callback) {
+function ensureUser(body, callback) {
   logger.info('Ensuring', body.email, 'user exists');
   var email = body.email;
   var userDoc = createUserDoc(email);
@@ -179,18 +179,9 @@ function allowCrossDomain(req, res, next) {
 
 commander
   .version('0.0.1')
-  .option('--host [value]', 'location of me')
-  .option('--db [value]', 'location of couch http://127.0.0.1:5984')
-  .option('--username [value]', 'CouchDB admin username')
-  .option('--password [value]', 'CouchDB admin password')
-  .option('--port <n>', 'Port number to run couch-persona on', parseInt)
+  .option('--username <value>', 'CouchDB admin username')
+  .option('--password <value>', 'CouchDB admin password')
   .parse(process.argv);
-
-if (!commander.host || !commander.db) {
-  console.log('The host and db arguments are required');
-  commander.help();
-  process.exit(1);
-}
 
 // TODO: We should verify that we have a running CouchDB instance, and probably
 // also test for CORS being enabled and warn if not
@@ -203,8 +194,8 @@ if (!commander.username || !commander.password) {
   request = request.defaults({json: true});
 }
 
-var db = url.parse(commander.db);
-var host = url.parse(commander.host);
+var db = url.parse(config.DB_URL);
+var host = url.parse(config.HOST_URL + ':' + config.HOST_PORT + '/');
 var adminAuth = {user: commander.username, pass: commander.password};
 
 var app = express();
@@ -253,4 +244,4 @@ app.post('/persona/sign-out', function(req, res) {
   });
 });
 
-app.listen(commander.port || 3000);
+app.listen(config.HOST_PORT);
