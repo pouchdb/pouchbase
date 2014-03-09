@@ -84,12 +84,30 @@ function ensureUser(body, callback) {
   });
 }
 
+function verifyAppName(appName, userDoc, callback) {
+  logger.info('Verifying application name: ' + appName);
+  request({
+    method: 'GET',
+    uri: url.format(db) + config.APP_DB + '/' + appName,
+    auth: adminAuth
+  }, function(err, res, body) {
+    if (err || res.statusCode != 200) {
+      callback({status: 400, json: {error: 'error_verifying_app'}});
+    } else {
+      // Email addresses arent valid database names, so just hash them
+      var emailHash = crypto.createHash('md5').update(userDoc.name).digest("hex");
+      userDoc.currentDb = config.DB_PREFIX + appName + '_' + emailHash;
+      callback(null, userDoc);
+    }
+  });
+}
+
 function ensureDatabase(userDoc, callback) {
-  logger.info('Ensuring', userDoc.db, 'exists');
+  logger.info('Ensuring', userDoc.currentDb, 'exists');
   request({
     method: 'PUT',
     auth: adminAuth,
-    uri: url.format(db) + userDoc.db
+    uri: url.format(db) + userDoc.currentDb
   }, function(err, res, body) {
     if (!err && (res.statusCode === 201 || res.statusCode === 412)) {
       callback(null, userDoc);
@@ -100,7 +118,7 @@ function ensureDatabase(userDoc, callback) {
 }
 
 function ensureUserSecurity(userDoc, callback) {
-  logger.info('Ensuring', userDoc.name, 'only can write to', userDoc.db);
+  logger.info('Ensuring', userDoc.name, 'only can write to', userDoc.currentDb);
   var securityDoc = {
     admins: {names:[], roles: []},
     readers: {names: [userDoc.name], roles: []}
@@ -109,7 +127,7 @@ function ensureUserSecurity(userDoc, callback) {
     method: 'PUT',
     json: securityDoc,
     auth: adminAuth,
-    uri: url.format(db) + userDoc.db + '/_security'
+    uri: url.format(db) + userDoc.currentDb + '/_security'
   }, function(err, res, body) {
     if (!err) {
       callback(null, userDoc);
@@ -157,15 +175,12 @@ function sendJSON(client, status, content, hdrs) {
 }
 
 function createUserDoc(email) {
-  // Email addresses arent valid database names, so just hash them
-  var dbName = DB_PREFIX + crypto.createHash('md5').update(email).digest("hex");
   return {
     _id: 'org.couchdb.user:' + encodeURIComponent(email),
     type: 'user',
     name: email,
     roles: ['browserid'],
     browserid: true,
-    db: dbName
   };
 }
 
@@ -217,6 +232,7 @@ app.post('/persona/sign-in', function(req, res) {
   async.waterfall([
     verifyAssert.bind(this, req.body.assert, req.headers.origin),
     ensureUser,
+    verifyAppName.bind(this, req.body.app),
     ensureDatabase,
     ensureUserSecurity,
     createSessionToken
@@ -228,7 +244,7 @@ app.post('/persona/sign-in', function(req, res) {
       logger.info('Successful sign-in');
       sendJSON(res, 200, {
         ok: true,
-        db: url.format(host) + 'db/' + userDoc.db,
+        db: url.format(host) + 'db/' + userDoc.currentDb,
         name: userDoc.name
       }, {'Set-Cookie': userDoc.authToken});
     }
