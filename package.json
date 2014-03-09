@@ -24,6 +24,7 @@
     "request": "*",
     "node-uuid": "*",
     "winston": "*",
-    "mkdirp": "*"
+    "mkdirp": "*",
+    "js-yaml": "*"
   }
 }

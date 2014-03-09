@@ -11,9 +11,6 @@
 
 "use strict";
 
-var ASSERT_URL = 'https://verifier.login.persona.org/verify';
-var DB_PREFIX = 'couch_persona_';
-
 var fs = require('fs');
 var path = require('path');
 var crypto = require('crypto');
@@ -25,6 +22,9 @@ var commander = require('commander');
 var express = require('express');
 var request = require('request');
 var uuid = require('node-uuid');
+var yaml = require('js-yaml');
+
+var config = yaml.safeLoad(fs.readFileSync('./config.yaml', 'utf8'));
 
 var logger = require('./couch-persona-log.js');
 
@@ -32,22 +32,22 @@ function verifyAssert(assert, audience, callback) {
   logger.info('Verifying assertion');
   request({
     method: 'POST',
-    uri: ASSERT_URL,
+    uri: config.ASSERT_URL,
     auth: adminAuth,
     form: {
       assertion: assert,
       audience: audience
     }
-  }, function(err, msg, body) {
+  }, function(err, res, body) {
     if (err || body.status == "failure") {
       callback({status: 400, json: {error: 'error_veryfying_assertion'}});
     } else {
-      callback(err, msg, body);
+      callback(err, body);
     }
   });
 }
 
-function ensureUser(msg, body, callback) {
+function ensureUser(body, callback) {
   logger.info('Ensuring', body.email, 'user exists');
   var email = body.email;
   var userDoc = createUserDoc(email);
@@ -84,12 +84,30 @@ function ensureUser(msg, body, callback) {
   });
 }
 
+function verifyAppName(appName, userDoc, callback) {
+  logger.info('Verifying application name: ' + appName);
+  request({
+    method: 'GET',
+    uri: url.format(db) + config.APP_DB + '/' + appName,
+    auth: adminAuth
+  }, function(err, res, body) {
+    if (err || res.statusCode != 200) {
+      callback({status: 400, json: {error: 'error_verifying_app'}});
+    } else {
+      // Email addresses arent valid database names, so just hash them
+      var emailHash = crypto.createHash('md5').update(userDoc.name).digest("hex");
+      userDoc.currentDb = config.DB_PREFIX + appName + '_' + emailHash;
+      callback(null, userDoc);
+    }
+  });
+}
+
 function ensureDatabase(userDoc, callback) {
-  logger.info('Ensuring', userDoc.db, 'exists');
+  logger.info('Ensuring', userDoc.currentDb, 'exists');
   request({
     method: 'PUT',
     auth: adminAuth,
-    uri: url.format(db) + userDoc.db
+    uri: url.format(db) + userDoc.currentDb
   }, function(err, res, body) {
     if (!err && (res.statusCode === 201 || res.statusCode === 412)) {
       callback(null, userDoc);
@@ -100,7 +118,7 @@ function ensureDatabase(userDoc, callback) {
 }
 
 function ensureUserSecurity(userDoc, callback) {
-  logger.info('Ensuring', userDoc.name, 'only can write to', userDoc.db);
+  logger.info('Ensuring', userDoc.name, 'only can write to', userDoc.currentDb);
   var securityDoc = {
     admins: {names:[], roles: []},
     readers: {names: [userDoc.name], roles: []}
@@ -109,7 +127,7 @@ function ensureUserSecurity(userDoc, callback) {
     method: 'PUT',
     json: securityDoc,
     auth: adminAuth,
-    uri: url.format(db) + userDoc.db + '/_security'
+    uri: url.format(db) + userDoc.currentDb + '/_security'
   }, function(err, res, body) {
     if (!err) {
       callback(null, userDoc);
@@ -157,15 +175,12 @@ function sendJSON(client, status, content, hdrs) {
 }
 
 function createUserDoc(email) {
-  // Email addresses arent valid database names, so just hash them
-  var dbName = DB_PREFIX + crypto.createHash('md5').update(email).digest("hex");
   return {
     _id: 'org.couchdb.user:' + encodeURIComponent(email),
     type: 'user',
     name: email,
     roles: ['browserid'],
     browserid: true,
-    db: dbName
   };
 }
 
@@ -179,18 +194,9 @@ function allowCrossDomain(req, res, next) {
 
 commander
   .version('0.0.1')
-  .option('--host [value]', 'location of me')
-  .option('--db [value]', 'location of couch http://127.0.0.1:5984')
-  .option('--username [value]', 'CouchDB admin username')
-  .option('--password [value]', 'CouchDB admin password')
-  .option('--port <n>', 'Port number to run couch-persona on', parseInt)
+  .option('--username <value>', 'CouchDB admin username')
+  .option('--password <value>', 'CouchDB admin password')
   .parse(process.argv);
-
-if (!commander.host || !commander.db) {
-  console.log('The host and db arguments are required');
-  commander.help();
-  process.exit(1);
-}
 
 // TODO: We should verify that we have a running CouchDB instance, and probably
 // also test for CORS being enabled and warn if not
@@ -203,8 +209,8 @@ if (!commander.username || !commander.password) {
   request = request.defaults({json: true});
 }
 
-var db = url.parse(commander.db);
-var host = url.parse(commander.host);
+var db = url.parse(config.DB_URL);
+var host = url.parse(config.HOST_URL + ':' + config.HOST_PORT + '/');
 var adminAuth = {user: commander.username, pass: commander.password};
 
 var app = express();
@@ -226,6 +232,7 @@ app.post('/persona/sign-in', function(req, res) {
   async.waterfall([
     verifyAssert.bind(this, req.body.assert, req.headers.origin),
     ensureUser,
+    verifyAppName.bind(this, req.body.app),
     ensureDatabase,
     ensureUserSecurity,
     createSessionToken
@@ -237,7 +244,7 @@ app.post('/persona/sign-in', function(req, res) {
       logger.info('Successful sign-in');
       sendJSON(res, 200, {
         ok: true,
-        db: url.format(host) + 'db/' + userDoc.db,
+        db: url.format(host) + 'db/' + userDoc.currentDb,
         name: userDoc.name
       }, {'Set-Cookie': userDoc.authToken});
     }
@@ -253,4 +260,4 @@ app.post('/persona/sign-out', function(req, res) {
   });
 });
 
-app.listen(commander.port || 3000);
+app.listen(config.HOST_PORT);
