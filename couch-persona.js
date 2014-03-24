@@ -84,11 +84,11 @@ function ensureUser(body, callback) {
   });
 }
 
-function verifyAppName(appName, userDoc, callback) {
-  logger.info('Verifying application name: ' + appName);
+function verifyApp(appKey, userDoc, callback) {
+  logger.info('Verifying application, key:' + appKey);
   request({
     method: 'GET',
-    uri: url.format(db) + config.APP_DB + '/' + appName,
+    uri: url.format(db) + config.APP_DB + '/' + appKey,
     auth: adminAuth
   }, function(err, res, body) {
     if (err || res.statusCode != 200) {
@@ -96,7 +96,8 @@ function verifyAppName(appName, userDoc, callback) {
     } else {
       // Email addresses arent valid database names, so just hash them
       var emailHash = crypto.createHash('md5').update(userDoc.name).digest("hex");
-      userDoc.currentDb = config.DB_PREFIX + appName + '_' + emailHash;
+      userDoc.currentDb = config.DB_PREFIX + body.dev + '_' +
+          body.name + '_' + emailHash;
       callback(null, userDoc);
     }
   });
@@ -210,7 +211,7 @@ if (!commander.username || !commander.password) {
 }
 
 var db = url.parse(config.DB_URL);
-var host = url.parse(config.HOST_URL + ':' + config.HOST_PORT + '/');
+var host = url.parse(config.HOST_URL);
 var adminAuth = {user: commander.username, pass: commander.password};
 
 var app = express();
@@ -232,7 +233,7 @@ app.post('/persona/sign-in', function(req, res) {
   async.waterfall([
     verifyAssert.bind(this, req.body.assert, req.headers.origin),
     ensureUser,
-    verifyAppName.bind(this, req.body.app),
+    verifyApp.bind(this, req.body.appkey),
     ensureDatabase,
     ensureUserSecurity,
     createSessionToken
