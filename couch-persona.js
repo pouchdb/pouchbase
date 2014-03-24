@@ -225,7 +225,8 @@ app.configure(function() {
     req.pipe(request(erl)).pipe(res);
   });
 
-  app.use(express.bodyParser());
+  app.use(express.urlencoded());
+  app.use(express.json());
 });
 
 app.post('/persona/sign-in', function(req, res) {
