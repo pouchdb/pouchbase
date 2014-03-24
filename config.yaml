@@ -2,7 +2,7 @@
 ASSERT_URL: https://verifier.login.persona.org/verify
 
 # URL and port of this couch-persona instance
-HOST_URL: http://localhost
+HOST_URL: http://localhost:3000
 HOST_PORT: 3000
 
 # URL to CouchDB instance that will be used
@@ -13,3 +13,6 @@ DB_PREFIX: couch_persona_
 
 # Name of db that will be used to store valid app names
 APP_DB: apps
+
+# Name of db that will be used to store developer profiles
+DEV_DB: developers
