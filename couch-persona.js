@@ -18,7 +18,6 @@ var url = require('url');
 
 var _ = require('underscore');
 var async = require('async');
-var commander = require('commander');
 var express = require('express');
 var request = require('request');
 var uuid = require('node-uuid');
@@ -193,16 +192,10 @@ function allowCrossDomain(req, res, next) {
   next();
 };
 
-commander
-  .version('0.0.1')
-  .option('--username <value>', 'CouchDB admin username')
-  .option('--password <value>', 'CouchDB admin password')
-  .parse(process.argv);
-
 // TODO: We should verify that we have a running CouchDB instance, and probably
 // also test for CORS being enabled and warn if not
 
-if (!commander.username || !commander.password) {
+if (!process.env.DB_USER || !process.env.DB_PASS) {
   // TODO: Ensure we are in admin party or fail nicely
   console.log('You are not in admin party');
   process.exit(1);
@@ -210,9 +203,14 @@ if (!commander.username || !commander.password) {
   request = request.defaults({json: true});
 }
 
-var db = url.parse(config.DB_URL);
-var host = url.parse(config.HOST_URL);
-var adminAuth = {user: commander.username, pass: commander.password};
+var db = url.parse(process.env.DB_URL);
+var port = process.env.PORT || 5000;
+var host = url.parse(process.env.HOST_URL || 'http://127.0.0.1:' + port);
+
+var adminAuth = {
+  user: process.env.DB_USER,
+  pass: process.env.DB_PASS
+};
 
 var app = express();
 
@@ -262,4 +260,4 @@ app.post('/persona/sign-out', function(req, res) {
   });
 });
 
-app.listen(config.HOST_PORT);
+app.listen(port);
