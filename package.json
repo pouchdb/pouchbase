@@ -19,7 +19,6 @@
     "http-proxy": "*",
     "underscore": "*",
     "async": "*",
-    "commander": "*",
     "express": "*",
     "request": "*",
     "node-uuid": "*",
