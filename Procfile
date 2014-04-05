@@ -1,0 +1,1 @@
+web: node couch-persona.js
