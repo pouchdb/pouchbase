@@ -1,5 +1,5 @@
 {
-  "name": "couch-persona",
+  "name": "Janus",
   "description": "A server that integrates persona with CouchDB",
   "version": "0.0.6",
   "homepage": "https://github.com/daleharvey/couch-persona",
@@ -13,7 +13,7 @@
   },
   "main": "./couch-persona.js",
   "bin": {
-    "couch-persona": "./couch-persona.js"
+    "janus": "./couch-persona.js"
   },
   "dependencies": {
     "http-proxy": "*",
@@ -25,5 +25,8 @@
     "winston": "*",
     "mkdirp": "*",
     "js-yaml": "*"
+  },
+  "scripts": {
+    "janus": "./couch-persona.js"
   }
 }
