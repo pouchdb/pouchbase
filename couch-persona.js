@@ -12,7 +12,6 @@
 "use strict";
 
 var fs = require('fs');
-var path = require('path');
 var crypto = require('crypto');
 var url = require('url');
 
@@ -37,8 +36,8 @@ function verifyAssert(assert, audience, callback) {
       assertion: assert,
       audience: audience
     }
-  }, function(err, res, body) {
-    if (err || body.status == "failure") {
+  }, function (err, res, body) {
+    if (err || body.status === "failure") {
       callback({status: 400, json: {error: 'error_veryfying_assertion'}});
     } else {
       callback(err, body);
@@ -55,12 +54,12 @@ function ensureUser(body, callback) {
     method: 'GET',
     uri: userDocUri,
     auth: adminAuth,
-  }, function(err, res, body) {
+  }, function (err, res, body) {
     if (err) {
       callback({status: 400, json: {error: 'error_retrieving_user'}});
     } else {
       if (res.statusCode === 200) {
-        // Copy over any existing attributes (including _rev so we can update it)
+        // Copy over any existing attributes (incl. _rev so we can update it)
         userDoc = _.extend(body, userDoc);
       } else {
         userDoc.password = uuid.v1();
@@ -72,7 +71,7 @@ function ensureUser(body, callback) {
         json: userDoc,
         auth: adminAuth,
         uri: userDocUri
-      }, function(err, res, body) {
+      }, function (err, res, body) {
         if (!err) {
           callback(null, userDoc);
         } else {
@@ -89,12 +88,13 @@ function verifyApp(appKey, userDoc, callback) {
     method: 'GET',
     uri: url.format(db) + config.APP_DB + '/' + appKey,
     auth: adminAuth
-  }, function(err, res, body) {
-    if (err || res.statusCode != 200) {
+  }, function (err, res, body) {
+    if (err || res.statusCode !== 200) {
       callback({status: 400, json: {error: 'error_verifying_app'}});
     } else {
       // Email addresses arent valid database names, so just hash them
-      var emailHash = crypto.createHash('md5').update(userDoc.name).digest("hex");
+      var emailHash = crypto.createHash('md5')
+          .update(userDoc.name).digest("hex");
       userDoc.currentDb = config.DB_PREFIX + body.dev + '_' +
           body.name + '_' + emailHash;
       callback(null, userDoc);
@@ -108,7 +108,7 @@ function ensureDatabase(userDoc, callback) {
     method: 'PUT',
     auth: adminAuth,
     uri: url.format(db) + userDoc.currentDb
-  }, function(err, res, body) {
+  }, function (err, res, body) {
     if (!err && (res.statusCode === 201 || res.statusCode === 412)) {
       callback(null, userDoc);
     } else {
@@ -120,7 +120,7 @@ function ensureDatabase(userDoc, callback) {
 function ensureUserSecurity(userDoc, callback) {
   logger.info('Ensuring', userDoc.name, 'only can write to', userDoc.currentDb);
   var securityDoc = {
-    admins: {names:[], roles: []},
+    admins: {names: [], roles: []},
     readers: {names: [userDoc.name], roles: []}
   };
   request({
@@ -128,7 +128,7 @@ function ensureUserSecurity(userDoc, callback) {
     json: securityDoc,
     auth: adminAuth,
     uri: url.format(db) + userDoc.currentDb + '/_security'
-  }, function(err, res, body) {
+  }, function (err, res, body) {
     if (!err) {
       callback(null, userDoc);
     } else {
@@ -147,10 +147,11 @@ function createSessionToken(userDoc, callback) {
       name: userDoc.name,
       password: userDoc.thepassword
     }
-  }, function(err, res, body) {
+  }, function (err, res, body) {
     if (res.statusCode === 200) {
       var cookies = parseCookie(res.headers['set-cookie'][0]);
-      userDoc.authToken = 'AuthSession=' + cookies.AuthSession + '; Path=/db; HttpOnly';
+      userDoc.authToken = 'AuthSession=' + cookies.AuthSession +
+          '; Path=/db; HttpOnly';
       callback(null, userDoc);
     } else {
       callback({status: 400, json: {error: 'error_creating_session'}});
@@ -160,7 +161,7 @@ function createSessionToken(userDoc, callback) {
 
 function parseCookie(str) {
   var cookies = {};
-  str.split(';').forEach(function(cookie) {
+  str.split(';').forEach(function (cookie) {
     var parts = cookie.split('=');
     cookies[parts[0].trim()] = (parts[1] || '').trim();
   });
@@ -190,7 +191,7 @@ function allowCrossDomain(req, res, next) {
   res.header('Access-Control-Allow-Headers', 'Content-Type');
   res.header('Access-Control-Allow-Credentials', 'true');
   next();
-};
+}
 
 // TODO: We should verify that we have a running CouchDB instance, and probably
 // also test for CORS being enabled and warn if not
@@ -214,12 +215,12 @@ var adminAuth = {
 
 var app = express();
 
-app.configure(function() {
+app.configure(function () {
 
   app.use(allowCrossDomain);
   app.use(express.cookieParser());
 
-  app.use('/db/', function(req, res) {
+  app.use('/db/', function (req, res) {
     var erl = url.format(db) + req.url.substring(1);
     req.pipe(request(erl)).pipe(res);
   });
@@ -228,7 +229,7 @@ app.configure(function() {
   app.use(express.json());
 });
 
-app.post('/persona/sign-in', function(req, res) {
+app.post('/persona/sign-in', function (req, res) {
   async.waterfall([
     verifyAssert.bind(this, req.body.assert, req.headers.origin),
     ensureUser,
@@ -251,7 +252,7 @@ app.post('/persona/sign-in', function(req, res) {
   });
 });
 
-app.post('/persona/sign-out', function(req, res) {
+app.post('/persona/sign-out', function (req, res) {
   // TODO: We should probably try and kill the session or something
   // but right now we dont know anything about it (since the authToken
   // is stored locally and not sent as a cookie)
