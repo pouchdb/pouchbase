@@ -195,69 +195,91 @@ function allowCrossDomain(req, res, next) {
 // TODO: We should verify that we have a running CouchDB instance, and probably
 // also test for CORS being enabled and warn if not
 
-if (!process.env.DB_USER || !process.env.DB_PASS) {
-  // TODO: Ensure we are in admin party or fail nicely
-  console.log('You are not in admin party');
+if (!process.env.DB_URL) {
+  console.log('DB_URL environment variable not set');
   process.exit(1);
-} else {
-  request = request.defaults({json: true});
 }
 
 var db = url.parse(process.env.DB_URL);
 var port = process.env.PORT || 5000;
 var host = url.parse(process.env.HOST_URL || 'http://127.0.0.1:' + port);
+var adminAuth = null;
 
-var adminAuth = {
-  user: process.env.DB_USER,
-  pass: process.env.DB_PASS
-};
+request = request.defaults({json: true});
 
-var app = express();
+if (process.env.DB_USER && process.env.DB_PASS) {
+  adminAuth = {
+    user: process.env.DB_USER,
+    pass: process.env.DB_PASS
+  };
+}
 
-app.configure(function() {
-
-  app.use(allowCrossDomain);
-  app.use(express.cookieParser());
-
-  app.use('/db/', function(req, res) {
-    var erl = url.format(db) + req.url.substring(1);
-    req.pipe(request(erl)).pipe(res);
-  });
-
-  app.use(express.urlencoded());
-  app.use(express.json());
+// Check DB connection and admin permissions
+request({
+  method: 'GET',
+  uri: url.format(db) + '_session',
+  auth: adminAuth
+}, function(err, res, body) {
+  if (err || res.statusCode != 200) {
+    console.log('Error connecting to database');
+    process.exit(1);
+  } else if (body.ok !== true || body.userCtx.roles.indexOf('_admin') == -1) {
+    console.log('Admin login data is incorrect or you are not in admin party');
+    process.exit(1);
+  } else {
+    continueInit();
+  }
 });
 
-app.post('/persona/sign-in', function(req, res) {
-  async.waterfall([
-    verifyAssert.bind(this, req.body.assert, req.headers.origin),
-    ensureUser,
-    verifyApp.bind(this, req.body.appkey),
-    ensureDatabase,
-    ensureUserSecurity,
-    createSessionToken
-  ], function (err, userDoc) {
-    if (err) {
-      logger.error('Error during sign-in: ', err);
-      sendJSON(res, err.status, err.json);
-    } else {
-      logger.info('Successful sign-in');
-      sendJSON(res, 200, {
-        ok: true,
-        db: url.format(host) + 'db/' + userDoc.currentDb,
-        name: userDoc.name
-      }, {'Set-Cookie': userDoc.authToken});
-    }
-  });
-});
+function continueInit() {
+  var app = express();
 
-app.post('/persona/sign-out', function(req, res) {
-  // TODO: We should probably try and kill the session or something
-  // but right now we dont know anything about it (since the authToken
-  // is stored locally and not sent as a cookie)
-  sendJSON(res, 400, {
-    ok: true
-  });
-});
+  app.configure(function() {
 
-app.listen(port);
+    app.use(allowCrossDomain);
+    app.use(express.cookieParser());
+
+    app.use('/db/', function(req, res) {
+      var erl = url.format(db) + req.url.substring(1);
+      req.pipe(request(erl)).pipe(res);
+    });
+
+    app.use(express.urlencoded());
+    app.use(express.json());
+  });
+
+  app.post('/persona/sign-in', function(req, res) {
+    async.waterfall([
+      verifyAssert.bind(this, req.body.assert, req.headers.origin),
+      ensureUser,
+      verifyApp.bind(this, req.body.appkey),
+      ensureDatabase,
+      ensureUserSecurity,
+      createSessionToken
+    ], function (err, userDoc) {
+      if (err) {
+        logger.error('Error during sign-in: ', err);
+        sendJSON(res, err.status, err.json);
+      } else {
+        logger.info('Successful sign-in');
+        sendJSON(res, 200, {
+          ok: true,
+          db: url.format(host) + 'db/' + userDoc.currentDb,
+          name: userDoc.name
+        }, {'Set-Cookie': userDoc.authToken});
+      }
+    });
+  });
+
+  app.post('/persona/sign-out', function(req, res) {
+    // TODO: We should probably try and kill the session or something
+    // but right now we dont know anything about it (since the authToken
+    // is stored locally and not sent as a cookie)
+    sendJSON(res, 400, {
+      ok: true
+    });
+  });
+
+  app.listen(port);
+  logger.info('Listening on ' + url.format(host));
+}
