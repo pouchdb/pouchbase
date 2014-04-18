@@ -22,7 +22,7 @@ function createDatabase(dbName, callback) {
     method: 'PUT',
     uri: url.format(db) + dbName,
     auth: adminAuth
-  }, function(err, res, body) {
+  }, function (err, res, body) {
     if (err || (res.statusCode !== 201 && res.statusCode !== 412)) {
       callback(true);
     } else {
@@ -61,6 +61,7 @@ commander
   .version('0.0.1')
   .option('--username <value>', 'CouchDB admin username')
   .option('--password <value>', 'CouchDB admin password')
+  .option('--dburl <value>', 'URL to CouchDB instance')
   .option('--configure', 'configure a clean install of couch-persona')
   .option('--add_dev', 'add a developer')
   .option('--register_app <name>', 'register a new app')
@@ -72,15 +73,20 @@ if (!commander.username || !commander.password) {
   commander.help();
 }
 
-var db = url.parse(config.DB_URL);
+if (!commander.dburl) {
+  console.log('database url required!');
+  commander.help();
+}
+
+var db = url.parse(commander.dburl);
 var adminAuth = {user: commander.username, pass: commander.password};
 
 if (commander.configure) {
   async.waterfall([
-    createDatabase.bind(this, config.APP_DB),
-    secureDatabase.bind(this, config.APP_DB),
-    createDatabase.bind(this, config.DEV_DB),
-    secureDatabase.bind(this, config.DEV_DB),
+    async.apply(createDatabase, config.APP_DB),
+    async.apply(secureDatabase, config.APP_DB),
+    async.apply(createDatabase, config.DEV_DB),
+    async.apply(secureDatabase, config.DEV_DB),
   ], function (err) {
     if (err) {
       console.log('ERROR');
@@ -99,7 +105,7 @@ if (commander.add_dev) {
     json: {
       _id: devId,
     }
-  }, function(err, res, body) {
+  }, function (err, res, body) {
     if (err || res.statusCode !== 201) {
       console.log('ERROR');
     } else {
@@ -114,8 +120,8 @@ if (commander.register_app) {
     console.log('Developer ID is required');
     commander.help();
   }
-  var name = commander.register_app;
-  var appKey = crypto.createHash('md5').update(name).update(uuid.v1())
+  var appName = commander.register_app;
+  var appKey = crypto.createHash('md5').update(appName).update(uuid.v1())
       .digest('hex');
 
   process.stdout.write('Registering app...');
@@ -126,10 +132,10 @@ if (commander.register_app) {
     auth: adminAuth,
     json: {
       _id: appKey,
-      name: name,
+      name: appName,
       dev: commander.app_dev
     }
-  }, function(err, res, body) {
+  }, function (err, res, body) {
     if (err || res.statusCode !== 201) {
       console.log('ERROR');
     } else {
