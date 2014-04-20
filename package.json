@@ -24,9 +24,11 @@
     "node-uuid": "*",
     "winston": "*",
     "mkdirp": "*",
-    "js-yaml": "*"
+    "js-yaml": "*",
+    "jshint": "~2.3.0"
   },
   "scripts": {
-    "janus": "./couch-persona.js"
+    "janus": "./couch-persona.js",
+    "jshint": "jshint -c .jshintrc *.js"
   }
 }
