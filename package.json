@@ -24,11 +24,10 @@
     "node-uuid": "*",
     "winston": "*",
     "mkdirp": "*",
-    "js-yaml": "*",
     "jshint": "~2.3.0"
   },
   "scripts": {
     "janus": "./lib/janus.js",
-    "jshint": "jshint -c .jshintrc *.js"
+    "jshint": "jshint -c .jshintrc lib/*.js"
   }
 }
