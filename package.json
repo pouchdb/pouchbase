@@ -2,7 +2,7 @@
   "name": "Janus",
   "description": "A server that integrates persona with CouchDB",
   "version": "0.0.6",
-  "homepage": "https://github.com/daleharvey/couch-persona",
+  "homepage": "https://github.com/pouchdb/janus",
   "author": {
     "name": "Dale Harvey",
     "email": "dale@arandomurl.com"
@@ -11,9 +11,9 @@
     "type": "git",
     "url": "git://github.com/daleharvey/couch-persona.git"
   },
-  "main": "./couch-persona.js",
+  "main": "./lib/janus.js",
   "bin": {
-    "janus": "./couch-persona.js"
+    "janus": "./lib/janus.js"
   },
   "dependencies": {
     "http-proxy": "*",
@@ -28,7 +28,7 @@
     "jshint": "~2.3.0"
   },
   "scripts": {
-    "janus": "./couch-persona.js",
+    "janus": "./lib/janus.js",
     "jshint": "jshint -c .jshintrc *.js"
   }
 }

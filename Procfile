@@ -1,1 +1,1 @@
-web: node couch-persona.js
+web: npm run janus
