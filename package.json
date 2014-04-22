@@ -26,8 +26,15 @@
     "mkdirp": "*",
     "jshint": "~2.3.0"
   },
+  "devDependencies": {
+    "watchify": "~0.4.1",
+    "browserify": "~3.24.13",
+    "nodemon": "*"
+  },
   "scripts": {
     "janus": "./lib/janus.js",
-    "jshint": "jshint -c .jshintrc lib/*.js"
+    "jshint": "jshint -c .jshintrc lib/*.js",
+    "dev" : "./bin/dev.sh",
+    "build-client": "browserify www/js/janus.js -s Janus > www/js/janus-client.js"
   }
 }
