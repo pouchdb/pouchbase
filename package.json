@@ -20,6 +20,8 @@
     "underscore": "*",
     "async": "*",
     "express": "*",
+    "cookie-parser": "*",
+    "body-parser": "*",
     "request": "*",
     "node-uuid": "*",
     "winston": "*",
