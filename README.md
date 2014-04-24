@@ -12,5 +12,5 @@ Install and start your server
 
 ```bash
 $ cd src/janus
-$ DB_URL=http://127.0.0.1:5984 DB_USER=john DB_PASS=doe npm run janus
+$ DB_URL=http://username:pass@127.0.0.1:5984 npm run janus
 ````
