@@ -15,5 +15,10 @@
   "globalstrict": true,
   "white": true,
   "indent": 2,
-  "forin": true
+  "forin": true,
+  "predef": [
+    "describe",
+    "it",
+    "before"
+  ]
 }
