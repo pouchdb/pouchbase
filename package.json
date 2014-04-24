@@ -31,12 +31,15 @@
   "devDependencies": {
     "watchify": "~0.4.1",
     "browserify": "~3.24.13",
+    "mocha": "~1.18.2",
+    "supertest": "~0.11.0",
     "nodemon": "*"
   },
   "scripts": {
     "janus": "./lib/janus.js",
-    "jshint": "jshint -c .jshintrc lib/*.js",
+    "jshint": "jshint -c .jshintrc lib/*.js tests/*.js",
     "dev" : "./bin/dev.sh",
-    "build-client": "browserify www/js/janus.js -s Janus > www/js/janus-client.js"
+    "build-client": "browserify www/js/janus.js -s Janus > www/js/janus-client.js",
+    "test": "npm run jshint && ./bin/run-test.sh"
   }
 }
