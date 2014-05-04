@@ -19,7 +19,8 @@ function sendJSON(client, status, content, hdrs) {
 app.use(bodyParser.urlencoded());
 
 app.post('/verify', function (req, res) {
-  var assert = req.body.assert;
+
+  var assert = req.body.assertion;
   if (assert in users) {
     sendJSON(res, 200, users[assert]);
   } else {

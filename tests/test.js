@@ -6,6 +6,7 @@ var persona = require('./persona-mock.js').app; // jshint unused: false
 describe('Test Janus', function () {
 
   var janus = null;
+  var loginUrl = '/login/';
 
   before(function (done) {
     require('../lib/janus.js').init(function (app) {
@@ -16,8 +17,17 @@ describe('Test Janus', function () {
 
   it('incorrect assertion', function (done) {
     request(janus)
-      .post('/login/')
+      .post(loginUrl)
       .send({assert: 'incorrect'})
-      .expect(400, done);
+      .expect(400)
+      .expect({error: 'error_verifying_assertion'}, done);
+  });
+
+  it('incorrect app', function (done) {
+    request(janus)
+      .post(loginUrl)
+      .send({assert: 'test1'})
+      .expect(400)
+      .expect({error: 'error_verifying_app'}, done);
   });
 });

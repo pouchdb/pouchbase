@@ -40,6 +40,6 @@
     "jshint": "jshint -c .jshintrc lib/*.js tests/*.js",
     "dev" : "./bin/dev.sh",
     "build-client": "browserify www/js/janus.js -s Janus > www/js/janus-client.js",
-    "test": "npm run jshint && ./bin/run-test.sh"
+    "test": "./bin/run-test.sh"
   }
 }
