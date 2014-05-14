@@ -19,6 +19,20 @@
 
 var janus = new Janus('developer');
 
-document.getElementById('persona').addEventListener('click', function() {
-  janus.login();
+document.getElementById('signupbtn').addEventListener('click', function(e) {
+  e.preventDefault();
+  janus.signup({
+    type: 'email',
+    email: document.getElementById('email').value,
+    pass: document.getElementById('password').value
+  });
+});
+
+document.getElementById('loginbtn').addEventListener('click', function(e) {
+  e.preventDefault();
+  janus.login({
+    type: 'email',
+    email: document.getElementById('email').value,
+    pass: document.getElementById('password').value
+  });
 });
