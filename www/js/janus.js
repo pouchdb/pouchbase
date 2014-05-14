@@ -4,6 +4,7 @@
 var EE = require('events').EventEmitter;
 
 function request(opts, callback) {
+
   var xhr = new XMLHttpRequest();
   if (typeof opts === 'string') {
     opts = {url: opts};
@@ -31,9 +32,6 @@ function request(opts, callback) {
     xhr.setRequestHeader(key, opts.headers[key]);
   });
 
-  console.log(params);
-  xhr.send(params);
-
   xhr.onreadystatechange = function() {
     var data = null;
     if (opts.json) {
@@ -45,40 +43,19 @@ function request(opts, callback) {
       opts.complete(xhr.status, data, xhr);
     }
   };
-}
 
-function personaLogin(assertion) {
-  request({
-    method: 'POST',
-    url: '/login/',
-    params: {
-      key: this.key,
-      assertion: assertion
-    }
-  }, function(xhr) {
-    //console.log(arguments);
-  });
-}
-
-function personaLogout() {
-  this.trigger('logout');
+  xhr.send(params);
 }
 
 function Janus(key) {
   EE.call(this);
-
   this.key = key;
-
-  if (navigator.id) {
-    navigator.id.watch({
-      onlogin: personaLogin.bind(this),
-      onlogout: personaLogout.bind(this)
-    });
-  }
 }
 
-Janus.prototype.login = function() {
-  navigator.id.request();
+Janus.prototype.signup = function(opts) {
+}
+
+Janus.prototype.login = function(opts) {
 }
 
 module.exports = Janus;
