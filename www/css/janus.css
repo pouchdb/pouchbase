@@ -96,18 +96,6 @@ nav li a {
   float: left;
 }
 
-#login {
-  background-color: #FFF;
-  border-radius: 5px;
-  padding: 10px;
-  min-width: 200px;
-  border: 1px solid #CCC;
-}
-
-#login h2 {
-  margin-top: 0;
-}
-
 input {
   padding: 5px 8px;
 }
@@ -157,4 +145,8 @@ code {
   font-size: 13px;
   color: #CCC;
   border-radius: 5px;
+}
+
+label {
+  display: block;
 }

@@ -71,9 +71,18 @@ db.sync(result.db);</code></pre></p>
         </p>
         <div id="login">
           <h2>Sign Up</h2>
-          <a id="persona" class="persona-button dark">
-            <span>Sign in</span>
-          </a>
+          <form>
+            <div>
+              <label for="email">Email: </label>
+              <input type="email" id="email" />
+            </div>
+            <div>
+              <label for="password">Password: </label>
+              <input type="text" id="password" />
+            </div>
+            <button id="loginbtn">Log in</button>
+            <button id="signupbtn">Sign Up</button>
+          </form>
         </div>
       </div>
     </script>
@@ -109,7 +118,6 @@ db.sync(result.db);</code></pre></p>
       </div>
     </script>
 
-    <script src="https://login.persona.org/include.js"></script>
     <script src="js/janus-client.js"></script>
     <script src="js/janus-webapp.js"></script>
 
