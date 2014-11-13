@@ -21,7 +21,8 @@
     "browser-request": "^0.3.2",
     "forever": "^0.11.1",
     "debug": "^2.1.0",
-    "marked": "^0.3.2"
+    "marked": "^0.3.2",
+    "browserify": "^6.3.2"
   },
   "devDependencies": {
     "nodemon": "^1.2.1",
