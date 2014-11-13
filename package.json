@@ -1,9 +1,9 @@
 {
   "scripts": {
-    "start": "forever lib/server/server.js",
+    "start": "npm run build && forever lib/server/server.js",
     "dev": "nodemon lib/server/server.js",
     "test": "rm -rf data && mocha --bail tests/*_test.js",
-    "build": "browserify lib/client/browser.js -s Janus > dist/janus.client.js"
+    "build": "browserify lib/client/browser.js -s PouchHost > dist/pouch.host.js"
   },
   "dependencies": {
     "emailjs": "^0.3.12",
