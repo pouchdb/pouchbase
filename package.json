@@ -22,7 +22,8 @@
     "forever": "^0.11.1",
     "debug": "^2.1.0",
     "marked": "^0.3.2",
-    "browserify": "^6.3.2"
+    "browserify": "^6.3.2",
+    "lie": "^2.8.0"
   },
   "devDependencies": {
     "nodemon": "^1.2.1",
@@ -30,6 +31,6 @@
   },
   "browser": {
     "request": "browser-request",
-    "bluebird": false
+    "bluebird": "lie"
   }
 }
