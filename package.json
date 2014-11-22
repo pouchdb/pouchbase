@@ -12,7 +12,6 @@
     "body-parser": "^1.9.0",
     "tough-cookie": "^0.12.1",
     "bcrypt": "^0.8.0",
-    "express-pouchdb": "^0.7.1",
     "mkdirp": "^0.5.0",
     "bluebird": "^2.3.6",
     "request": "^2.46.0",
@@ -23,7 +22,8 @@
     "debug": "^2.1.0",
     "marked": "^0.3.2",
     "browserify": "^6.3.2",
-    "lie": "^2.8.0"
+    "lie": "^2.8.0",
+    "pouchdb-express-router": "0.0.1"
   },
   "devDependencies": {
     "nodemon": "^1.2.1",
