@@ -25,7 +25,7 @@ Download https://pouch.host/pouch.host.js and
 add it to your web application
 
 ```
-<script src="https://pouch.host/pouch.host.js'></script>
+<script src="https://pouch.host/pouch.host.js"></script>
 ```
 
 When the user wants to login, call PouchHost.login
@@ -35,7 +35,7 @@ loginButton.addEventListener('click', function() {
   PouchHost.login({
     email: emailField.value
   });
-}
+});
 ```
 
 The user will then be sent an email, when they click on the url they will be
