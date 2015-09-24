@@ -24,13 +24,13 @@ http://pouchdb.com/getting-started.html for help getting started with PouchDB
 Download https://pouch.host/pouch.host.js and
 add it to your web application
 
-```
+```html
 <script src="https://pouch.host/pouch.host.js"></script>
 ```
 
 When the user wants to login, call PouchHost.login
 
-```
+```javascript
 loginButton.addEventListener('click', function() {
   PouchHost.login({
     email: emailField.value
@@ -42,7 +42,7 @@ The user will then be sent an email, when they click on the url they will be
 authenticated and sent back to your application with a valid session, so check
 for a valid session when your web application loads
 
-```
+```javascript
 var db = .... // Instiated elsewhere
 var sync;
 
@@ -67,7 +67,7 @@ dont want to use the provided JS client, then you can call it directly.
 
 ##### Example Body:
 
-```
+```json
 {
   "email": "myemail@example.org"
 }
@@ -85,17 +85,17 @@ be included in the response
 
 ##### Example Response:
 
-```
+```json
 {
   "ok": true,
-  "user": "myemail@example.org"
+  "user": "myemail@example.org",
   "db": "https://pouch.host/db/"
 }
 ```
 
 ##### Failed Response:
 
-```
+```json
 {
   "error": true,
   "reason": "unauthorized"
