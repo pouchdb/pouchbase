@@ -3,8 +3,8 @@
 var Promise = require('bluebird');
 var expect = require('chai').expect;
 
-var janusServer = require('../lib/server/server.js');
-var JanusClient = require('../lib/client/janus.js');
+var Server = require('../lib/server/server.js');
+var Client = require('../lib/client/pouchbase.js');
 
 var http = require('http');
 
@@ -17,7 +17,7 @@ function testServer(port) {
   });
 }
 
-describe('Test Basic Janus Functionality', function () {
+describe('Test Basic Functionality', function () {
 
   var host;
   var server;
@@ -30,7 +30,7 @@ describe('Test Basic Janus Functionality', function () {
 
   before(function (done) {
     Promise.all([testServer(3031), testServer(3032)]).then(function() {
-      janusServer.init(function (server) {
+      Server.init(function (server) {
         serverStarted(server, done);
       });
     });
@@ -43,8 +43,8 @@ describe('Test Basic Janus Functionality', function () {
 
   it('Basic login flow', function (done) {
     var user = 'dale@arandomurl.com';
-    var client = new JanusClient('http://127.0.0.1:3031/');
-    var anonymous = new JanusClient('http://127.0.0.1:3032/');
+    var client = new Client('http://127.0.0.1:3031/');
+    var anonymous = new Client('http://127.0.0.1:3032/');
     client.options('server', host);
     anonymous.options('server', host);
 
@@ -60,7 +60,7 @@ describe('Test Basic Janus Functionality', function () {
 
       // Fetch the token validation url from the server and
       // use it to validate the client
-      var url = janusServer.fetchTokenUrl(user, 'http://127.0.0.1:3031/');
+      var url = Server.fetchTokenUrl(user, 'http://127.0.0.1:3031/');
       return client.validateToken(url);
     }).then(function() {
 
@@ -87,7 +87,7 @@ describe('Test Basic Janus Functionality', function () {
 
   it('Login persist across server restart', function (done) {
     var user = 'dale@arandomurl.com';
-    var client = new JanusClient('http://127.0.0.1:3031/');
+    var client = new Client('http://127.0.0.1:3031/');
     client.options('server', host);
 
     // Send a login request
@@ -96,7 +96,7 @@ describe('Test Basic Janus Functionality', function () {
 
       // Fetch the token validation url from the server and
       // use it to validate the client
-      var url = janusServer.fetchTokenUrl(user, 'http://127.0.0.1:3031/');
+      var url = Server.fetchTokenUrl(user, 'http://127.0.0.1:3031/');
       return client.validateToken(url);
     }).then(function() {
 
@@ -111,7 +111,7 @@ describe('Test Basic Janus Functionality', function () {
 
       // Restart the server
       return new Promise(function(resolve) {
-        janusServer.init(function(server) {
+        Server.init(function(server) {
           serverStarted(server, resolve);
         });
       });
@@ -126,12 +126,12 @@ describe('Test Basic Janus Functionality', function () {
 
   it('Users db access', function (done) {
     var user = 'dale@arandomurl.com';
-    var client = new JanusClient('http://127.0.0.1:3031/');
+    var client = new Client('http://127.0.0.1:3031/');
     client.options('server', host);
     var dbUrl, r;
 
     client.login({email: user}).then(function() {
-      var url = janusServer.fetchTokenUrl(user, 'http://127.0.0.1:3031/');
+      var url = Server.fetchTokenUrl(user, 'http://127.0.0.1:3031/');
       return client.validateToken(url);
     }).then(function() {
       return client.session();
@@ -168,15 +168,15 @@ describe('Test Basic Janus Functionality', function () {
   it('The same user on different hosts dont share data', function(done) {
 
     var user = 'dale@arandomurl.com';
-    var client1 = new JanusClient('http://127.0.0.1:3031/');
-    var client2 = new JanusClient('http://127.0.0.1:3032/');
+    var client1 = new Client('http://127.0.0.1:3031/');
+    var client2 = new Client('http://127.0.0.1:3032/');
     client1.options('server', host);
     client2.options('server', host);
 
     var dbUrl, r;
 
     client1.login({email: user}).then(function(result) {
-      var url = janusServer.fetchTokenUrl(user, 'http://127.0.0.1:3031/');
+      var url = Server.fetchTokenUrl(user, 'http://127.0.0.1:3031/');
       return client1.validateToken(url);
     }).then(function() {
       return client1.session();
@@ -201,7 +201,7 @@ describe('Test Basic Janus Functionality', function () {
 
       return client2.login({email: user});
     }).then(function() {
-      var url = janusServer.fetchTokenUrl(user, 'http://127.0.0.1:3032/');
+      var url = Server.fetchTokenUrl(user, 'http://127.0.0.1:3032/');
       return client2.validateToken(url);
     }).then(function() {
       return client2.session();
@@ -222,7 +222,7 @@ describe('Test Basic Janus Functionality', function () {
 
   it('Store custom information for the user', function(done) {
     var user = 'dale@arandomurl.com';
-    var client = new JanusClient('http://127.0.0.1:3031/');
+    var client = new Client('http://127.0.0.1:3031/');
 
     // Send a login request
     client.login({email: user, foo: 'bar'}).then(function(result) {
@@ -230,7 +230,7 @@ describe('Test Basic Janus Functionality', function () {
 
       // Fetch the token validation url from the server and
       // use it to validate the client
-      var url = janusServer.fetchTokenUrl(user, 'http://127.0.0.1:3031/');
+      var url = Server.fetchTokenUrl(user, 'http://127.0.0.1:3031/');
       return client.validateToken(url);
     }).then(function() {
 

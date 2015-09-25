@@ -3,7 +3,7 @@
     "start": "npm run build && forever lib/server/server.js",
     "dev": "nodemon lib/server/server.js",
     "test": "rm -rf data && mocha --bail tests/*_test.js",
-    "build": "browserify lib/client/browser.js -s PouchHost > dist/pouch.host.js"
+    "build": "mkdir -p dist && browserify lib/client/browser.js -s PouchBase > dist/pouchbase.js"
   },
   "dependencies": {
     "emailjs": "^0.3.12",
@@ -27,8 +27,9 @@
     "cookie-session": "^1.1.0"
   },
   "devDependencies": {
-    "nodemon": "^1.2.1",
-    "chai": "^1.9.2"
+    "chai": "^1.9.2",
+    "mocha": "^2.3.3",
+    "nodemon": "^1.2.1"
   },
   "browser": {
     "request": "browser-request",

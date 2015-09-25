@@ -1,7 +1,7 @@
-pouch.host
-=====
+PouchBase
+=========
 
-pouch.host is a service that lets your PouchDB applications easily provide login
+PouchBase is a service that lets your PouchDB applications easily provide login
 and online sync functionality.
 
 When users of your application want to login, they provide an email address and
@@ -15,24 +15,24 @@ whenever the user logs in to your application, their data is automatically
 kept in sync.
 
 
-pouch.host Getting Started
----------------------
+PouchBase Getting Started
+-------------------------
 
 The first step is to have a PouchDB application, you can visit
 http://pouchdb.com/getting-started.html for help getting started with PouchDB
 
-Download https://pouch.host/pouch.host.js and
+Download https://pouchbase.com/pouchbase.js and
 add it to your web application
 
 ```html
-<script src="https://pouch.host/pouch.host.js"></script>
+<script src="https://pouchbase.com/pouchbase.js"></script>
 ```
 
-When the user wants to login, call PouchHost.login
+When the user wants to login, call PouchBase.login
 
 ```javascript
 loginButton.addEventListener('click', function() {
-  PouchHost.login({
+  PouchBase.login({
     email: emailField.value
   });
 });
@@ -46,7 +46,7 @@ for a valid session when your web application loads
 var db = .... // Instiated elsewhere
 var sync;
 
-PouchHost.session().then(function (result) {
+PouchBase.session().then(function (result) {
    if (result.ok) {
      // We have a valid session, sync!
      sync = db.sync(result.db, {live: true});
@@ -57,11 +57,11 @@ PouchHost.session().then(function (result) {
 And your application should now keep your users data in sync wherever they
 login.
 
-PouchHost API
----------
+PouchBase API
+-------------
 
-The PouchHost API is a simple JSON api served from https://pouch.host/, if you
-dont want to use the provided JS client, then you can call it directly.
+The PouchBase API is a simple JSON api served from https://pouchbase.com/, if
+you dont want to use the provided JS client, then you can call it directly.
 
 # POST /login/
 
@@ -89,7 +89,7 @@ be included in the response
 {
   "ok": true,
   "user": "myemail@example.org",
-  "db": "https://pouch.host/db/"
+  "db": "https://pouchbase.com/db/"
 }
 ```
 
@@ -115,22 +115,4 @@ Deletes a current users session
 
 If the user has a current valid session, they will be provided a database in which
 to sync data to, requests to /db/* will be forwarded to a PouchDB (CouchDB) instance
-that only the current user can access
-
-<style>
-  body {
-    font-family: "Open Sans",Helvetica,Arial,sans-serif;
-    font-size: 14px;
-    line-height: 1.42857;
-    color: #555;
-    background-color: #F6F6F6;
-    width: 800px;
-    margin: 0 auto;
-  }
-  pre {
-    background: white;
-    display: block;
-    padding: 10px;
-    border: 1px solid #CCC;
-  }
-</style>
+that only the current user can access.
