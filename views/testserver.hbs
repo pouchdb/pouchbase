@@ -1,0 +1,15 @@
+<h1>Test Servers</h1>
+
+<p>These are temporary hosted PouchDB instances that can be used for
+  testing and experimenting with the PouchDB API and replication. Just start
+  using the database directly straight away</p>
+
+<pre><code>> var db = new PouchDB('http://pouchbase.com/db/tmp/mydbname');</code></pre>
+
+<p>Or via the HTTP API:</p>
+
+<pre><code>$ curl -X PUT http://pouchbase.com/db/tmp/mydbname
+{"ok":true}</code></pre>
+
+<p>These databases will be deleted periodically and the world will be able
+  to read and write your data so do not put anything sensitive in there.</p>

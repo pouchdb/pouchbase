@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="47px" height="47px" viewBox="0 0 47 47" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns">
+    <title>noun_110491_cc</title>
+    <description>Created with Sketch (http://www.bohemiancoding.com/sketch)</description>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage">
+        <g id="noun_110491_cc" sketch:type="MSLayerGroup" stroke-width="2" stroke="#000000">
+            <g id="Group" sketch:type="MSShapeGroup">
+                <circle id="Oval" cx="23.1" cy="23.1" r="22.1"></circle>
+                <ellipse id="Oval" cx="23.3" cy="23.1" rx="12.3" ry="22.1"></ellipse>
+                <path d="M23,0 L23,46" id="Shape"></path>
+                <path d="M42.4,34.3 L3.6,34.3" id="Shape"></path>
+                <path d="M46,23 L0,23" id="Shape"></path>
+                <path d="M42.4,11.7 L3.6,11.7" id="Shape"></path>
+            </g>
+        </g>
+    </g>
+</svg>
