@@ -23,7 +23,7 @@
     "mkdirp": "^0.5.0",
     "node-uuid": "^1.4.1",
     "pouchdb": "^4.0.3",
-    "pouchdb-express-router": "0.0.1",
+    "pouchdb-express-router": "0.0.8",
     "request": "^2.46.0",
     "tough-cookie": "^0.12.1"
   },
