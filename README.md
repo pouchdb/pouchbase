@@ -1,5 +1,11 @@
-PouchBase
+DEPRECATED
 =========
+
+This repository will likely be deleted shortly, keeping it up temporarily in case
+anyone wants to fork it etc before hand.
+
+PouchBase
+---------
 
 PouchBase is a service that lets your PouchDB applications easily provide login
 and online sync functionality.
