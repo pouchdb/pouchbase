@@ -6,30 +6,30 @@
     "build": "mkdir -p dist && browserify lib/client/browser.js -s PouchBase > dist/pouchbase.js"
   },
   "dependencies": {
-    "bcrypt": "^0.8.0",
-    "bluebird": "^2.3.6",
+    "bcrypt": "^1.0.2",
+    "bluebird": "^3.5.0",
     "body-parser": "^1.9.0",
     "browser-request": "^0.3.2",
-    "browserify": "^6.3.2",
+    "browserify": "^14.1.0",
     "cookie-session": "^1.1.0",
     "debug": "^2.1.0",
-    "emailjs": "^0.3.12",
+    "emailjs": "^1.0.8",
     "express": "^4.10.0",
-    "express-handlebars": "^2.0.1",
+    "express-handlebars": "^3.0.0",
     "express-session": "^1.9.0",
-    "forever": "^0.11.1",
-    "lie": "^2.8.0",
+    "forever": "^0.15.3",
+    "lie": "^3.1.1",
     "marked": "^0.3.2",
     "mkdirp": "^0.5.0",
     "node-uuid": "^1.4.1",
-    "pouchdb": "^4.0.3",
-    "pouchdb-express-router": "0.0.8",
+    "pouchdb": "^6.1.2",
+    "pouchdb-express-router": "0.0.9",
     "request": "^2.46.0",
-    "tough-cookie": "^0.12.1"
+    "tough-cookie": "^2.3.2"
   },
   "devDependencies": {
-    "chai": "^1.9.2",
-    "mocha": "^2.3.3",
+    "chai": "^3.5.0",
+    "mocha": "^3.2.0",
     "nodemon": "^1.2.1"
   },
   "browser": {

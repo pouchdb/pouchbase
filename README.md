@@ -1,6 +1,8 @@
 DEPRECATED
 =========
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/pouchdb/pouchbase.svg)](https://greenkeeper.io/)
+
 This repository will likely be deleted shortly, keeping it up temporarily in case
 anyone wants to fork it etc before hand.
 
